@@ -119,10 +119,10 @@ export default function Goal({ goals }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Goal" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="flex items-center justify-between">
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <h2 className="text-2xl font-bold tracking-tight">Savings Goals</h2>
-                    <Button onClick={() => { setIsAddOpen(true); resetForm(); }}>
+                    <Button onClick={() => { setIsAddOpen(true); resetForm(); }} className="w-full sm:w-auto">
                         <Plus className="mr-2 h-4 w-4" /> Add Goal
                     </Button>
                 </div>
