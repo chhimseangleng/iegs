@@ -128,10 +128,10 @@ export default function Income({ incomes, categories, stats }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Income" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="flex items-center justify-between">
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <h2 className="text-2xl font-bold tracking-tight">Income Tracking</h2>
-                    <Button onClick={() => { setIsAddOpen(true); reset(); }}>
+                    <Button onClick={() => { setIsAddOpen(true); reset(); }} className="w-full sm:w-auto">
                         <Plus className="mr-2 h-4 w-4" /> Add Income
                     </Button>
                 </div>

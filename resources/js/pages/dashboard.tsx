@@ -70,7 +70,7 @@ export default function Dashboard({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 sm:p-6">
                 {/* Summary Cards */}
                 <div className="grid gap-4 md:grid-cols-3">
                     <Card className="relative overflow-hidden border-none bg-linear-to-br from-indigo-600 via-violet-600 to-purple-700 text-primary-foreground shadow-lg shadow-indigo-500/20">
@@ -132,7 +132,7 @@ export default function Dashboard({
                             </div>
                         </CardHeader>
                         <CardContent className="pl-0">
-                            <div className="h-[320px] w-full">
+                            <div className="h-[300px] sm:h-[320px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={monthlyStats} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />

@@ -528,6 +528,7 @@ export default function Tracking({
                                                 fontSize={11} 
                                                 tickLine={false} 
                                                 axisLine={false}
+                                                tick={true}
                                             />
                                             <YAxis
                                                 fontSize={11}
