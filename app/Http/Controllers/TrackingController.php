@@ -190,12 +190,35 @@ class TrackingController extends Controller
             $savingQuery->where('saving_date', '>=', $startDate);
         }
 
+        $totalIncome = (float) $incomeQuery->sum('amount');
+        $totalExpense = (float) $expenseQuery->sum('amount');
+        $totalSaving = (float) $savingQuery->sum('amount');
+        $balance = $totalIncome - $totalExpense - $totalSaving;
+
+        $goals = $user->goals()->where('status', 'in_progress')->get()->map(function ($goal) {
+            $progress = $goal->target_amount > 0
+                ? round(($goal->current_amount / $goal->target_amount) * 100, 1)
+                : 0;
+            return [
+                'id' => $goal->id,
+                'name' => $goal->name,
+                'target_amount' => (float) $goal->target_amount,
+                'current_amount' => (float) $goal->current_amount,
+                'remaining' => max(0, (float) $goal->target_amount - (float) $goal->current_amount),
+                'progress' => min($progress, 100),
+                'start_date' => $goal->start_date?->format('Y-m-d'),
+                'target_date' => $goal->target_date?->format('Y-m-d'),
+                'status' => $goal->status,
+                'image' => $goal->image,
+            ];
+        });
+
         return [
-            'totalIncome' => (float) $incomeQuery->sum('amount'),
-            'totalExpense' => (float) $expenseQuery->sum('amount'),
-            'totalSaving' => (float) $savingQuery->sum('amount'),
-            'balance' => (float) ($incomeQuery->sum('amount') - $expenseQuery->sum('amount') - $savingQuery->sum('amount')),
-            'goals' => $user->goals()->where('status', 'in_progress')->get(),
+            'totalIncome' => $totalIncome,
+            'totalExpense' => $totalExpense,
+            'totalSaving' => $totalSaving,
+            'balance' => $balance,
+            'goals' => $goals,
         ];
     }
 

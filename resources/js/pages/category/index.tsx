@@ -1,17 +1,15 @@
-import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Archive, Plus, Pencil, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +28,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
 
 interface Category {
     id: number;
@@ -51,9 +51,20 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Category({ categories }: Props) {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
-    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [editingCategory, setEditingCategory] = useState<Category | null>(
+        null,
+    );
 
-    const { data, setData, post, put, delete: destroy, reset, errors, processing } = useForm({
+    const {
+        data,
+        setData,
+        post,
+        put,
+        delete: destroy,
+        reset,
+        errors,
+        processing,
+    } = useForm({
         name: '',
         type: 'expense' as 'income' | 'expense',
     });
@@ -93,9 +104,17 @@ export default function Category({ categories }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Category" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <h2 className="text-2xl font-bold tracking-tight">Categories</h2>
-                    <Button onClick={() => { setIsAddOpen(true); reset(); }} className="w-full sm:w-auto">
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                    <h2 className="text-2xl font-bold tracking-tight">
+                        Categories
+                    </h2>
+                    <Button
+                        onClick={() => {
+                            setIsAddOpen(true);
+                            reset();
+                        }}
+                        className="w-full sm:w-auto"
+                    >
                         <Plus className="mr-2 h-4 w-4" /> Add Category
                     </Button>
                 </div>
@@ -107,7 +126,7 @@ export default function Category({ categories }: Props) {
                         </CardHeader>
                         <CardContent>
                             {incomeCategories.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-48 text-muted-foreground border-2 border-dashed rounded-lg">
+                                <div className="flex h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed text-muted-foreground">
                                     <p>No income categories.</p>
                                 </div>
                             ) : (
@@ -115,23 +134,46 @@ export default function Category({ categories }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Name</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead className="text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {incomeCategories.map((category) => (
                                             <TableRow key={category.id}>
-                                                <TableCell className="font-medium">{category.name}</TableCell>
+                                                <TableCell className="font-medium">
+                                                    {category.name}
+                                                </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-2">
-                                                        <Button variant="ghost" size="icon" onClick={() => {
-                                                            setEditingCategory(category);
-                                                            setData({ name: category.name, type: category.type });
-                                                            setIsEditOpen(true);
-                                                        }}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => {
+                                                                setEditingCategory(
+                                                                    category,
+                                                                );
+                                                                setData({
+                                                                    name: category.name,
+                                                                    type: category.type,
+                                                                });
+                                                                setIsEditOpen(
+                                                                    true,
+                                                                );
+                                                            }}
+                                                        >
                                                             <Pencil className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteCategory(category.id)}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() =>
+                                                                deleteCategory(
+                                                                    category.id,
+                                                                )
+                                                            }
+                                                        >
                                                             <Trash2 className="h-4 w-4 text-destructive" />
                                                         </Button>
                                                     </div>
@@ -150,7 +192,7 @@ export default function Category({ categories }: Props) {
                         </CardHeader>
                         <CardContent>
                             {expenseCategories.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-48 text-muted-foreground border-2 border-dashed rounded-lg">
+                                <div className="flex h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed text-muted-foreground">
                                     <p>No expense categories.</p>
                                 </div>
                             ) : (
@@ -158,23 +200,46 @@ export default function Category({ categories }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Name</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead className="text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {expenseCategories.map((category) => (
                                             <TableRow key={category.id}>
-                                                <TableCell className="font-medium">{category.name}</TableCell>
+                                                <TableCell className="font-medium">
+                                                    {category.name}
+                                                </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-2">
-                                                        <Button variant="ghost" size="icon" onClick={() => {
-                                                            setEditingCategory(category);
-                                                            setData({ name: category.name, type: category.type });
-                                                            setIsEditOpen(true);
-                                                        }}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => {
+                                                                setEditingCategory(
+                                                                    category,
+                                                                );
+                                                                setData({
+                                                                    name: category.name,
+                                                                    type: category.type,
+                                                                });
+                                                                setIsEditOpen(
+                                                                    true,
+                                                                );
+                                                            }}
+                                                        >
                                                             <Pencil className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteCategory(category.id)}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() =>
+                                                                deleteCategory(
+                                                                    category.id,
+                                                                )
+                                                            }
+                                                        >
                                                             <Trash2 className="h-4 w-4 text-destructive" />
                                                         </Button>
                                                     </div>
@@ -198,25 +263,50 @@ export default function Category({ categories }: Props) {
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Name</Label>
-                                    <Input id="name" value={data.name} onChange={e => setData('name', e.target.value)} />
-                                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                                    <Input
+                                        id="name"
+                                        value={data.name}
+                                        onChange={(e) =>
+                                            setData('name', e.target.value)
+                                        }
+                                    />
+                                    {errors.name && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.name}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="type">Type</Label>
-                                    <Select value={data.type} onValueChange={(value: any) => setData('type', value)}>
+                                    <Select
+                                        value={data.type}
+                                        onValueChange={(value: any) =>
+                                            setData('type', value)
+                                        }
+                                    >
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="income">Income</SelectItem>
-                                            <SelectItem value="expense">Expense</SelectItem>
+                                            <SelectItem value="income">
+                                                Income
+                                            </SelectItem>
+                                            <SelectItem value="expense">
+                                                Expense
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    {errors.type && <p className="text-sm text-destructive">{errors.type}</p>}
+                                    {errors.type && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.type}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="submit" disabled={processing}>Save Category</Button>
+                                <Button type="submit" disabled={processing}>
+                                    Save Category
+                                </Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
@@ -232,25 +322,50 @@ export default function Category({ categories }: Props) {
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="edit-name">Name</Label>
-                                    <Input id="edit-name" value={data.name} onChange={e => setData('name', e.target.value)} />
-                                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                                    <Input
+                                        id="edit-name"
+                                        value={data.name}
+                                        onChange={(e) =>
+                                            setData('name', e.target.value)
+                                        }
+                                    />
+                                    {errors.name && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.name}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="edit-type">Type</Label>
-                                    <Select value={data.type} onValueChange={(value: any) => setData('type', value)}>
+                                    <Select
+                                        value={data.type}
+                                        onValueChange={(value: any) =>
+                                            setData('type', value)
+                                        }
+                                    >
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="income">Income</SelectItem>
-                                            <SelectItem value="expense">Expense</SelectItem>
+                                            <SelectItem value="income">
+                                                Income
+                                            </SelectItem>
+                                            <SelectItem value="expense">
+                                                Expense
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    {errors.type && <p className="text-sm text-destructive">{errors.type}</p>}
+                                    {errors.type && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.type}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="submit" disabled={processing}>Update Category</Button>
+                                <Button type="submit" disabled={processing}>
+                                    Update Category
+                                </Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>

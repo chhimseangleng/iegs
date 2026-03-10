@@ -1,6 +1,6 @@
 export default function AppLogo() {
     return (
-        <div className="flex h-full flex-col items-center justify-center w-full">
+        <div className="flex h-full w-full flex-col items-center justify-center">
             {/* Bigger logo */}
             <div className="h-28 w-28">
                 <img

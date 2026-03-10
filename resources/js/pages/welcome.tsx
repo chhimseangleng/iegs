@@ -1,12 +1,31 @@
-import { Head, Link, usePage } from '@inertiajs/react'
-import { login, register, dashboard } from '@/routes'
-import { type SharedData } from '@/types'
+import { Head, Link, usePage } from '@inertiajs/react';
 
-export default function Welcome({ canRegister = true }: { canRegister?: boolean }) {
-    const { auth } = usePage<SharedData>().props
+import { dashboard, login, register } from '@/routes';
+import { type SharedData } from '@/types';
+
+export default function Welcome({
+    canRegister = true,
+}: {
+    canRegister?: boolean;
+}) {
+    const { auth } = usePage<SharedData>().props;
 
     // More icons for the flying cloud
-    const icons = ['💰', '💸', '🪙', '💎', '💭', '🤑', '🧾', '🏦', '💳', '🪙', '🪙', '💰', '💸']
+    const icons = [
+        '💰',
+        '💸',
+        '🪙',
+        '💎',
+        '💭',
+        '🤑',
+        '🧾',
+        '🏦',
+        '💳',
+        '🪙',
+        '🪙',
+        '💰',
+        '💸',
+    ];
 
     return (
         <>
@@ -18,18 +37,18 @@ export default function Welcome({ canRegister = true }: { canRegister?: boolean 
                 />
             </Head>
 
-            <div className="relative min-h-screen bg-white overflow-hidden">
-
+            <div className="relative min-h-screen overflow-hidden bg-white">
                 {/* Flying icons cloud */}
                 <div className="pointer-events-none absolute inset-0">
                     {Array.from({ length: 30 }).map((_, i) => {
-                        const icon = icons[Math.floor(Math.random() * icons.length)]
-                        const top = Math.random() * 100
-                        const left = Math.random() * 100
-                        const size = 24 + Math.random() * 40
-                        const duration = 5 + Math.random() * 10
-                        const delay = Math.random() * 5
-                        const rotate = Math.random() * 360
+                        const icon =
+                            icons[Math.floor(Math.random() * icons.length)];
+                        const top = Math.random() * 100;
+                        const left = Math.random() * 100;
+                        const size = 24 + Math.random() * 40;
+                        const duration = 5 + Math.random() * 10;
+                        const delay = Math.random() * 5;
+                        const rotate = Math.random() * 360;
                         return (
                             <span
                                 key={i}
@@ -45,14 +64,13 @@ export default function Welcome({ canRegister = true }: { canRegister?: boolean 
                             >
                                 {icon}
                             </span>
-                        )
+                        );
                     })}
                 </div>
 
                 {/* Center content */}
                 <main className="relative z-10 flex min-h-screen items-center justify-center px-6">
-                    <div className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white/80 p-10 text-center backdrop-blur-md shadow-xl">
-
+                    <div className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white/80 p-10 text-center shadow-xl backdrop-blur-md">
                         {/* Main Icon */}
                         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
                             <img
@@ -63,13 +81,13 @@ export default function Welcome({ canRegister = true }: { canRegister?: boolean 
                         </div>
 
                         <h1 className="mb-4 text-4xl font-bold text-gray-900">
-                            Welcome to <span className="text-blue-600">IEGS</span>
+                            Welcome to{' '}
+                            <span className="text-blue-600">IEGS</span>
                         </h1>
 
-                        <p className="mb-8 text-gray-700 text-lg">
+                        <p className="mb-8 text-lg text-gray-700">
                             Know your money. Reach your goals. Live your dreams.
                         </p>
-
 
                         {!auth.user ? (
                             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
@@ -120,5 +138,5 @@ export default function Welcome({ canRegister = true }: { canRegister?: boolean 
                 </style>
             </div>
         </>
-    )
+    );
 }

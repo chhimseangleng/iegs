@@ -92,7 +92,7 @@ class DashboardController extends Controller
             });
 
         // Merge and sort for recent history list
-        $recentTransactions = $recentIncomes->merge($recentExpenses)
+        $recentTransactions = $recentIncomes->concat($recentExpenses)
             ->sortByDesc('date')
             ->take(5)
             ->values();

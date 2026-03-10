@@ -1,17 +1,22 @@
-import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, TrendingDown, Calendar, Plus, Pencil, Trash2 } from 'lucide-react';
-import { useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+import {
+    Calendar,
+    CreditCard,
+    Pencil,
+    Plus,
+    Trash2,
+    TrendingDown,
+} from 'lucide-react';
 import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +35,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { router } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
 
 interface Expense {
     id: number;
@@ -57,7 +63,6 @@ interface ExpensePagination {
     last_page: number;
 }
 
-
 interface Category {
     id: number;
     name: string;
@@ -75,7 +80,6 @@ interface Props {
     stats: ExpenseStats;
 }
 
-
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Expense',
@@ -83,12 +87,21 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Expense({ expenses, categories, stats  }: Props) {
+export default function Expense({ expenses, categories, stats }: Props) {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
-    const { data, setData, post, put, delete: destroy, reset, errors, processing } = useForm({
+    const {
+        data,
+        setData,
+        post,
+        put,
+        delete: destroy,
+        reset,
+        errors,
+        processing,
+    } = useForm({
         category_id: '',
         amount: '',
         description: '',
@@ -98,7 +111,6 @@ export default function Expense({ expenses, categories, stats  }: Props) {
     const totalExpense = Number(stats?.total_expense || 0);
     const highestExpense = Number(stats?.highest_expense || 0);
     const transactionCount = stats?.transaction_count || 0;
-
 
     const submitAdd = (e: React.FormEvent) => {
         e.preventDefault();
@@ -132,9 +144,17 @@ export default function Expense({ expenses, categories, stats  }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Expense" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <h2 className="text-2xl font-bold tracking-tight">Expense Tracking</h2>
-                    <Button onClick={() => { setIsAddOpen(true); reset(); }} className="w-full sm:w-auto">
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                    <h2 className="text-2xl font-bold tracking-tight">
+                        Expense Tracking
+                    </h2>
+                    <Button
+                        onClick={() => {
+                            setIsAddOpen(true);
+                            reset();
+                        }}
+                        className="w-full sm:w-auto"
+                    >
                         <Plus className="mr-2 h-4 w-4" /> Add Expense
                     </Button>
                 </div>
@@ -142,7 +162,9 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                 <div className="grid gap-4 md:grid-cols-3">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Expense</CardTitle>
+                            <CardTitle className="text-sm font-medium">
+                                Total Expense
+                            </CardTitle>
                             <CreditCard className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -150,12 +172,16 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                                 ${totalExpense.toFixed(2)}
                             </div>
 
-                            <p className="text-xs text-muted-foreground">Cumulative</p>
+                            <p className="text-xs text-muted-foreground">
+                                Cumulative
+                            </p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Highest Expense</CardTitle>
+                            <CardTitle className="text-sm font-medium">
+                                Highest Expense
+                            </CardTitle>
                             <TrendingDown className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -163,12 +189,16 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                                 ${highestExpense.toFixed(2)}
                             </div>
 
-                            <p className="text-xs text-muted-foreground">Single transaction</p>
+                            <p className="text-xs text-muted-foreground">
+                                Single transaction
+                            </p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+                            <CardTitle className="text-sm font-medium">
+                                Transactions
+                            </CardTitle>
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -176,7 +206,9 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                                 {transactionCount}
                             </div>
 
-                            <p className="text-xs text-muted-foreground">Total records</p>
+                            <p className="text-xs text-muted-foreground">
+                                Total records
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
@@ -188,7 +220,7 @@ export default function Expense({ expenses, categories, stats  }: Props) {
 
                     <CardContent>
                         {!expenses?.data || expenses.data.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed rounded-lg">
+                            <div className="flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed text-muted-foreground">
                                 <p>No expense records found.</p>
                             </div>
                         ) : (
@@ -199,8 +231,12 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                                             <TableHead>Date</TableHead>
                                             <TableHead>Category</TableHead>
                                             <TableHead>Description</TableHead>
-                                            <TableHead className="text-right">Amount</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead className="text-right">
+                                                Amount
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
 
@@ -208,12 +244,21 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                                         {expenses.data.map((expense) => (
                                             <TableRow key={expense.id}>
                                                 <TableCell>
-                                                    {new Date(expense.expense_date).toLocaleDateString()}
+                                                    {new Date(
+                                                        expense.expense_date,
+                                                    ).toLocaleDateString()}
                                                 </TableCell>
-                                                <TableCell>{expense.category?.name}</TableCell>
-                                                <TableCell>{expense.description}</TableCell>
+                                                <TableCell>
+                                                    {expense.category?.name}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {expense.description}
+                                                </TableCell>
                                                 <TableCell className="text-right font-medium text-red-600">
-                                                    -${Number(expense.amount).toFixed(2)}
+                                                    -$
+                                                    {Number(
+                                                        expense.amount,
+                                                    ).toFixed(2)}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-2">
@@ -221,14 +266,22 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                                                             variant="ghost"
                                                             size="icon"
                                                             onClick={() => {
-                                                                setEditingExpense(expense);
+                                                                setEditingExpense(
+                                                                    expense,
+                                                                );
                                                                 setData({
-                                                                    category_id: expense.category_id.toString(),
+                                                                    category_id:
+                                                                        expense.category_id.toString(),
                                                                     amount: expense.amount.toString(),
-                                                                    description: expense.description || '',
-                                                                    expense_date: expense.expense_date,
+                                                                    description:
+                                                                        expense.description ||
+                                                                        '',
+                                                                    expense_date:
+                                                                        expense.expense_date,
                                                                 });
-                                                                setIsEditOpen(true);
+                                                                setIsEditOpen(
+                                                                    true,
+                                                                );
                                                             }}
                                                         >
                                                             <Pencil className="h-4 w-4" />
@@ -237,7 +290,11 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            onClick={() => deleteExpense(expense.id)}
+                                                            onClick={() =>
+                                                                deleteExpense(
+                                                                    expense.id,
+                                                                )
+                                                            }
                                                         >
                                                             <Trash2 className="h-4 w-4 text-destructive" />
                                                         </Button>
@@ -249,15 +306,24 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                                 </Table>
 
                                 {/* Pagination */}
-                                <div className="flex justify-center gap-2 mt-4">
+                                <div className="mt-4 flex justify-center gap-2">
                                     {expenses?.links?.map((link, index) => (
                                         <Button
                                             key={index}
                                             size="sm"
-                                            variant={link.active ? 'default' : 'outline'}
+                                            variant={
+                                                link.active
+                                                    ? 'default'
+                                                    : 'outline'
+                                            }
                                             disabled={!link.url}
-                                            onClick={() => link.url && router.visit(link.url)}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                            onClick={() =>
+                                                link.url &&
+                                                router.visit(link.url)
+                                            }
+                                            dangerouslySetInnerHTML={{
+                                                __html: link.label,
+                                            }}
                                         />
                                     ))}
                                 </div>
@@ -265,7 +331,6 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                         )}
                     </CardContent>
                 </Card>
-
             </div>
 
             {/* Add Modal */}
@@ -278,36 +343,85 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
-                                <Select value={data.category_id} onValueChange={val => setData('category_id', val)}>
+                                <Select
+                                    value={data.category_id}
+                                    onValueChange={(val) =>
+                                        setData('category_id', val)
+                                    }
+                                >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {categories?.map(cat => (
-                                            <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                                        {categories?.map((cat) => (
+                                            <SelectItem
+                                                key={cat.id}
+                                                value={cat.id.toString()}
+                                            >
+                                                {cat.name}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                {errors.category_id && <p className="text-sm text-destructive">{errors.category_id}</p>}
+                                {errors.category_id && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.category_id}
+                                    </p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="amount">Amount</Label>
-                                <Input id="amount" type="number" step="0.01" value={data.amount} onChange={e => setData('amount', e.target.value)} />
-                                {errors.amount && <p className="text-sm text-destructive">{errors.amount}</p>}
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    step="0.01"
+                                    value={data.amount}
+                                    onChange={(e) =>
+                                        setData('amount', e.target.value)
+                                    }
+                                />
+                                {errors.amount && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.amount}
+                                    </p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="date">Date</Label>
-                                <Input id="date" type="date" value={data.expense_date} onChange={e => setData('expense_date', e.target.value)} />
-                                {errors.expense_date && <p className="text-sm text-destructive">{errors.expense_date}</p>}
+                                <Input
+                                    id="date"
+                                    type="date"
+                                    value={data.expense_date}
+                                    onChange={(e) =>
+                                        setData('expense_date', e.target.value)
+                                    }
+                                />
+                                {errors.expense_date && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.expense_date}
+                                    </p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="desc">Description</Label>
-                                <Input id="desc" value={data.description} onChange={e => setData('description', e.target.value)} />
-                                {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                                <Input
+                                    id="desc"
+                                    value={data.description}
+                                    onChange={(e) =>
+                                        setData('description', e.target.value)
+                                    }
+                                />
+                                {errors.description && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.description}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="submit" disabled={processing}>Save Record</Button>
+                            <Button type="submit" disabled={processing}>
+                                Save Record
+                            </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -323,36 +437,85 @@ export default function Expense({ expenses, categories, stats  }: Props) {
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-category">Category</Label>
-                                <Select value={data.category_id} onValueChange={val => setData('category_id', val)}>
+                                <Select
+                                    value={data.category_id}
+                                    onValueChange={(val) =>
+                                        setData('category_id', val)
+                                    }
+                                >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {categories?.map(cat => (
-                                            <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                                        {categories?.map((cat) => (
+                                            <SelectItem
+                                                key={cat.id}
+                                                value={cat.id.toString()}
+                                            >
+                                                {cat.name}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                {errors.category_id && <p className="text-sm text-destructive">{errors.category_id}</p>}
+                                {errors.category_id && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.category_id}
+                                    </p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-amount">Amount</Label>
-                                <Input id="edit-amount" type="number" step="0.01" value={data.amount} onChange={e => setData('amount', e.target.value)} />
-                                {errors.amount && <p className="text-sm text-destructive">{errors.amount}</p>}
+                                <Input
+                                    id="edit-amount"
+                                    type="number"
+                                    step="0.01"
+                                    value={data.amount}
+                                    onChange={(e) =>
+                                        setData('amount', e.target.value)
+                                    }
+                                />
+                                {errors.amount && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.amount}
+                                    </p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-date">Date</Label>
-                                <Input id="edit-date" type="date" value={data.expense_date} onChange={e => setData('expense_date', e.target.value)} />
-                                {errors.expense_date && <p className="text-sm text-destructive">{errors.expense_date}</p>}
+                                <Input
+                                    id="edit-date"
+                                    type="date"
+                                    value={data.expense_date}
+                                    onChange={(e) =>
+                                        setData('expense_date', e.target.value)
+                                    }
+                                />
+                                {errors.expense_date && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.expense_date}
+                                    </p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-desc">Description</Label>
-                                <Input id="edit-desc" value={data.description} onChange={e => setData('description', e.target.value)} />
-                                {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                                <Input
+                                    id="edit-desc"
+                                    value={data.description}
+                                    onChange={(e) =>
+                                        setData('description', e.target.value)
+                                    }
+                                />
+                                {errors.description && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.description}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="submit" disabled={processing}>Update Record</Button>
+                            <Button type="submit" disabled={processing}>
+                                Update Record
+                            </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

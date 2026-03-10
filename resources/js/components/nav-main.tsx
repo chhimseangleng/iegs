@@ -29,10 +29,10 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             <Link
                                 href={item.href}
                                 prefetch
-                                className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
+                                className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-blue-600 hover:text-white"
                             >
                                 {item.icon && (
-                                    <div className="flex items-center justify-center h-5 w-5">
+                                    <div className="flex h-5 w-5 items-center justify-center">
                                         <item.icon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
                                     </div>
                                 )}
@@ -44,9 +44,6 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                     </SidebarMenuItem>
                 ))}
             </SidebarMenu>
-
-
-
         </SidebarGroup>
     );
 }

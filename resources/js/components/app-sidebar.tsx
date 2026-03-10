@@ -1,18 +1,16 @@
 import { Link } from '@inertiajs/react';
 import {
-    BookOpen,
+    Archive,
+    CreditCard,
+    DollarSign,
     Folder,
     LayoutGrid,
-    CreditCard,
-    Target,
-    Archive,
-    Wallet,
     PiggyBank,
-    DollarSign,
+    Target,
     Users,
+    Wallet,
 } from 'lucide-react';
 
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -21,7 +19,6 @@ import {
     SidebarFooter,
     SidebarHeader,
     SidebarMenu,
-    SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
@@ -48,12 +45,11 @@ export function AppSidebar() {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarHeader className="flex flex-col items-center justify-center h-48">
+                        <SidebarHeader className="flex h-48 flex-col items-center justify-center">
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarHeader>
-
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
