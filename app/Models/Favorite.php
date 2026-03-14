@@ -10,6 +10,7 @@ class Favorite extends Model
         'sender_id',
         'receiver_id',
         'status',
+        'type',
     ];
 
     public function sender()

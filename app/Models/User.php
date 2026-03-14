@@ -82,28 +82,54 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the favorite request sent by this user.
+     * Get the favorite requests sent by this user.
      */
     public function favoriteSent()
     {
-        return $this->hasOne(Favorite::class, 'sender_id');
+        return $this->hasMany(Favorite::class, 'sender_id');
     }
 
     /**
-     * Get the favorite request received by this user.
+     * Get the favorite requests received by this user.
      */
     public function favoriteReceived()
     {
-        return $this->hasOne(Favorite::class, 'receiver_id');
+        return $this->hasMany(Favorite::class, 'receiver_id');
     }
 
     /**
-     * Get the linked favorite user if linked.
+     * Get all linked favorite users.
      */
-    public function linkedFavorite()
+    public function linkedFavorites()
     {
-        // Try to find an accepted favorite where the user is either sender or receiver
-        $favorite = Favorite::where('status', 'accepted')
+        $favorites = Favorite::where('status', 'accepted')
+            ->where(function ($query) {
+                $query->where('sender_id', $this->id)
+                      ->orWhere('receiver_id', $this->id);
+            })
+            ->get();
+
+        return $favorites->map(function ($favorite) {
+            $linkedUser = $favorite->sender_id == $this->id 
+                ? User::find($favorite->receiver_id) 
+                : User::find($favorite->sender_id);
+            
+            if ($linkedUser) {
+                $linkedUser->favorite_id = $favorite->id;
+                $linkedUser->favorite_type = $favorite->type;
+            }
+            
+            return $linkedUser;
+        })->filter();
+    }
+
+    /**
+     * Get a specific linked favorite user by favorite ID.
+     */
+    public function linkedFavoriteById($favoriteId)
+    {
+        $favorite = Favorite::where('id', $favoriteId)
+            ->where('status', 'accepted')
             ->where(function ($query) {
                 $query->where('sender_id', $this->id)
                       ->orWhere('receiver_id', $this->id);
@@ -114,8 +140,15 @@ class User extends Authenticatable
             return null;
         }
 
-        return $favorite->sender_id == $this->id 
+        $linkedUser = $favorite->sender_id == $this->id 
             ? User::find($favorite->receiver_id) 
             : User::find($favorite->sender_id);
+
+        if ($linkedUser) {
+            $linkedUser->favorite_id = $favorite->id;
+            $linkedUser->favorite_type = $favorite->type;
+        }
+
+        return $linkedUser;
     }
 }

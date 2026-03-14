@@ -1,6 +1,8 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import {
     Calendar,
+    ChevronDown,
+    ChevronRight,
     CreditCard,
     Pencil,
     Plus,
@@ -9,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -27,14 +30,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -52,15 +47,11 @@ interface Expense {
     updated_at: string;
 }
 
-interface ExpensePagination {
-    data: Expense[];
-    links: {
-        url: string | null;
-        label: string;
-        active: boolean;
-    }[];
-    current_page: number;
-    last_page: number;
+interface DayGroup {
+    date: string;
+    total: number;
+    count: number;
+    expenses: Expense[];
 }
 
 interface Category {
@@ -75,7 +66,7 @@ interface ExpenseStats {
 }
 
 interface Props {
-    expenses: ExpensePagination;
+    grouped_expenses: DayGroup[];
     categories: Category[];
     stats: ExpenseStats;
 }
@@ -87,10 +78,81 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Expense({ expenses, categories, stats }: Props) {
+function formatDate(dateStr: string): string {
+    const date = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+
+    if (dateOnly.getTime() === today.getTime()) {
+        return 'Today';
+    }
+    if (dateOnly.getTime() === yesterday.getTime()) {
+        return 'Yesterday';
+    }
+
+    return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+}
+
+function formatShortDate(dateStr: string): string {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+    });
+}
+
+// Category color palette for distinct visual grouping
+const categoryColors: Record<string, string> = {};
+const colorPalette = [
+    'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+    'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+    'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
+    'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+    'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300',
+    'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
+    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300',
+    'bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300',
+    'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300',
+];
+
+function getCategoryColor(categoryName: string): string {
+    if (!categoryColors[categoryName]) {
+        const index =
+            Object.keys(categoryColors).length % colorPalette.length;
+        categoryColors[categoryName] = colorPalette[index];
+    }
+    return categoryColors[categoryName];
+}
+
+export default function Expense({
+    grouped_expenses,
+    categories,
+    stats,
+}: Props) {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+    const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>(
+        () => {
+            // Expand all days by default
+            const initial: Record<string, boolean> = {};
+            grouped_expenses?.forEach((group) => {
+                initial[group.date] = true;
+            });
+            return initial;
+        },
+    );
 
     const {
         data,
@@ -111,6 +173,25 @@ export default function Expense({ expenses, categories, stats }: Props) {
     const totalExpense = Number(stats?.total_expense || 0);
     const highestExpense = Number(stats?.highest_expense || 0);
     const transactionCount = stats?.transaction_count || 0;
+
+    const toggleDay = (date: string) => {
+        setExpandedDays((prev) => ({
+            ...prev,
+            [date]: !prev[date],
+        }));
+    };
+
+    const expandAll = () => {
+        const all: Record<string, boolean> = {};
+        grouped_expenses?.forEach((group) => {
+            all[group.date] = true;
+        });
+        setExpandedDays(all);
+    };
+
+    const collapseAll = () => {
+        setExpandedDays({});
+    };
 
     const submitAdd = (e: React.FormEvent) => {
         e.preventDefault();
@@ -140,6 +221,10 @@ export default function Expense({ expenses, categories, stats }: Props) {
         }
     };
 
+    const allExpanded =
+        grouped_expenses?.length > 0 &&
+        grouped_expenses.every((g) => expandedDays[g.date]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Expense" />
@@ -159,6 +244,7 @@ export default function Expense({ expenses, categories, stats }: Props) {
                     </Button>
                 </div>
 
+                {/* Stats Cards */}
                 <div className="grid gap-4 md:grid-cols-3">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -171,7 +257,6 @@ export default function Expense({ expenses, categories, stats }: Props) {
                             <div className="text-2xl font-bold">
                                 ${totalExpense.toFixed(2)}
                             </div>
-
                             <p className="text-xs text-muted-foreground">
                                 Cumulative
                             </p>
@@ -188,7 +273,6 @@ export default function Expense({ expenses, categories, stats }: Props) {
                             <div className="text-2xl font-bold">
                                 ${highestExpense.toFixed(2)}
                             </div>
-
                             <p className="text-xs text-muted-foreground">
                                 Single transaction
                             </p>
@@ -205,7 +289,6 @@ export default function Expense({ expenses, categories, stats }: Props) {
                             <div className="text-2xl font-bold">
                                 {transactionCount}
                             </div>
-
                             <p className="text-xs text-muted-foreground">
                                 Total records
                             </p>
@@ -213,121 +296,194 @@ export default function Expense({ expenses, categories, stats }: Props) {
                     </Card>
                 </div>
 
+                {/* Daily Expense List */}
                 <Card className="flex-1">
-                    <CardHeader>
-                        <CardTitle>Recent Expenses</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Daily Expenses</CardTitle>
+                        {grouped_expenses?.length > 0 && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={allExpanded ? collapseAll : expandAll}
+                                className="text-xs text-muted-foreground"
+                            >
+                                {allExpanded ? 'Collapse All' : 'Expand All'}
+                            </Button>
+                        )}
                     </CardHeader>
 
                     <CardContent>
-                        {!expenses?.data || expenses.data.length === 0 ? (
+                        {!grouped_expenses || grouped_expenses.length === 0 ? (
                             <div className="flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed text-muted-foreground">
                                 <p>No expense records found.</p>
                             </div>
                         ) : (
-                            <>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Category</TableHead>
-                                            <TableHead>Description</TableHead>
-                                            <TableHead className="text-right">
-                                                Amount
-                                            </TableHead>
-                                            <TableHead className="text-right">
-                                                Actions
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-
-                                    <TableBody>
-                                        {expenses.data.map((expense) => (
-                                            <TableRow key={expense.id}>
-                                                <TableCell>
-                                                    {new Date(
-                                                        expense.expense_date,
-                                                    ).toLocaleDateString()}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {expense.category?.name}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {expense.description}
-                                                </TableCell>
-                                                <TableCell className="text-right font-medium text-red-600">
+                            <div className="space-y-3">
+                                {grouped_expenses.map((dayGroup) => (
+                                    <div
+                                        key={dayGroup.date}
+                                        className="overflow-hidden rounded-lg border transition-all duration-200"
+                                    >
+                                        {/* Day Header */}
+                                        <button
+                                            onClick={() =>
+                                                toggleDay(dayGroup.date)
+                                            }
+                                            className="hover:bg-muted/50 flex w-full items-center justify-between px-4 py-3 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                                    {expandedDays[
+                                                        dayGroup.date
+                                                    ] ? (
+                                                        <ChevronDown className="h-4 w-4" />
+                                                    ) : (
+                                                        <ChevronRight className="h-4 w-4" />
+                                                    )}
+                                                </div>
+                                                <div className="text-left">
+                                                    <p className="text-sm font-semibold">
+                                                        {formatDate(
+                                                            dayGroup.date,
+                                                        )}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {dayGroup.count}{' '}
+                                                        {dayGroup.count === 1
+                                                            ? 'transaction'
+                                                            : 'transactions'}
+                                                        {' · '}
+                                                        {formatShortDate(
+                                                            dayGroup.date,
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-lg font-bold text-red-600 dark:text-red-400">
                                                     -$
                                                     {Number(
-                                                        expense.amount,
+                                                        dayGroup.total,
                                                     ).toFixed(2)}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => {
-                                                                setEditingExpense(
-                                                                    expense,
-                                                                );
-                                                                setData({
-                                                                    category_id:
-                                                                        expense.category_id.toString(),
-                                                                    amount: expense.amount.toString(),
-                                                                    description:
-                                                                        expense.description ||
-                                                                        '',
-                                                                    expense_date:
-                                                                        expense.expense_date,
-                                                                });
-                                                                setIsEditOpen(
-                                                                    true,
-                                                                );
-                                                            }}
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    daily total
+                                                </p>
+                                            </div>
+                                        </button>
 
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() =>
-                                                                deleteExpense(
-                                                                    expense.id,
-                                                                )
-                                                            }
+                                        {/* Expanded Expenses List */}
+                                        {expandedDays[dayGroup.date] && (
+                                            <div className="border-t bg-muted/20">
+                                                {dayGroup.expenses.map(
+                                                    (expense, idx) => (
+                                                        <div
+                                                            key={expense.id}
+                                                            className={`flex items-center justify-between px-4 py-3 transition-colors hover:bg-muted/30 ${
+                                                                idx <
+                                                                dayGroup
+                                                                    .expenses
+                                                                    .length -
+                                                                    1
+                                                                    ? 'border-b border-dashed border-muted-foreground/20'
+                                                                    : ''
+                                                            }`}
                                                         >
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-
-                                {/* Pagination */}
-                                <div className="mt-4 flex justify-center gap-2">
-                                    {expenses?.links?.map((link, index) => (
-                                        <Button
-                                            key={index}
-                                            size="sm"
-                                            variant={
-                                                link.active
-                                                    ? 'default'
-                                                    : 'outline'
-                                            }
-                                            disabled={!link.url}
-                                            onClick={() =>
-                                                link.url &&
-                                                router.visit(link.url)
-                                            }
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            </>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
+                                                                    <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {expense
+                                                                            .category
+                                                                            ?.name && (
+                                                                            <Badge
+                                                                                variant="secondary"
+                                                                                className={`text-xs font-medium ${getCategoryColor(expense.category.name)}`}
+                                                                            >
+                                                                                {
+                                                                                    expense
+                                                                                        .category
+                                                                                        .name
+                                                                                }
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
+                                                                    {expense.description && (
+                                                                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                                                            {
+                                                                                expense.description
+                                                                            }
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="whitespace-nowrap text-sm font-semibold text-red-600 dark:text-red-400">
+                                                                    -$
+                                                                    {Number(
+                                                                        expense.amount,
+                                                                    ).toFixed(
+                                                                        2,
+                                                                    )}
+                                                                </span>
+                                                                <div className="flex gap-0.5">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-7 w-7"
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) => {
+                                                                            e.stopPropagation();
+                                                                            setEditingExpense(
+                                                                                expense,
+                                                                            );
+                                                                            setData(
+                                                                                {
+                                                                                    category_id:
+                                                                                        expense.category_id.toString(),
+                                                                                    amount: expense.amount.toString(),
+                                                                                    description:
+                                                                                        expense.description ||
+                                                                                        '',
+                                                                                    expense_date:
+                                                                                        expense.expense_date,
+                                                                                },
+                                                                            );
+                                                                            setIsEditOpen(
+                                                                                true,
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <Pencil className="h-3.5 w-3.5" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-7 w-7"
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) => {
+                                                                            e.stopPropagation();
+                                                                            deleteExpense(
+                                                                                expense.id,
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ),
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </CardContent>
                 </Card>

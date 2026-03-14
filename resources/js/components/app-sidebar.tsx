@@ -8,6 +8,7 @@ import {
     PiggyBank,
     Target,
     Users,
+    UsersRound,
     Wallet,
 } from 'lucide-react';
 
@@ -37,6 +38,7 @@ const mainNavItems: NavItem[] = [
     { title: 'Category', href: '/category', icon: Archive },
     { title: 'History', href: '/history', icon: Folder },
     { title: 'Tracking', href: '/tracking', icon: Users },
+    { title: 'Group Tracking', href: '/group-tracking', icon: UsersRound },
 ];
 
 export function AppSidebar() {

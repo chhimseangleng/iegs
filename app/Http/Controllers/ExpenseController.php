@@ -12,29 +12,43 @@ use Illuminate\Support\Facades\DB;
 class ExpenseController extends Controller
 {
     public function index(): Response
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    return Inertia::render('expense/index', [
-        // PAGINATED DATA (table only)
-        'expenses' => $user->expenses()
+        // Fetch all expenses ordered by date descending, grouped by day
+        $expenses = $user->expenses()
             ->with('category')
-            ->latest()
-            ->paginate(10)
-            ->withQueryString(),
+            ->orderBy('expense_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy(function ($expense) {
+                return $expense->expense_date->format('Y-m-d');
+            })
+            ->map(function ($dayExpenses, $date) {
+                return [
+                    'date' => $date,
+                    'total' => $dayExpenses->sum('amount'),
+                    'count' => $dayExpenses->count(),
+                    'expenses' => $dayExpenses->values(),
+                ];
+            })
+            ->values();
 
-        // GLOBAL STATS (ALL RECORDS)
-        'stats' => [
-            'total_expense' => $user->expenses()->sum('amount'),
-            'highest_expense' => $user->expenses()->max('amount'),
-            'transaction_count' => $user->expenses()->count(),
-        ],
+        return Inertia::render('expense/index', [
+            'grouped_expenses' => $expenses,
 
-        'categories' => $user->categories()
-            ->where('type', 'expense')
-            ->get(),
-    ]);
-}
+            // GLOBAL STATS (ALL RECORDS)
+            'stats' => [
+                'total_expense' => $user->expenses()->sum('amount'),
+                'highest_expense' => $user->expenses()->max('amount'),
+                'transaction_count' => $user->expenses()->count(),
+            ],
+
+            'categories' => $user->categories()
+                ->where('type', 'expense')
+                ->get(),
+        ]);
+    }
 
 
     public function store(Request $request)

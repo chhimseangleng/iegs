@@ -45,6 +45,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('tracking/chart-data', [App\Http\Controllers\TrackingController::class, 'getChartData'])->name('tracking.chart-data');
     Route::get('tracking/daily-details', [App\Http\Controllers\TrackingController::class, 'getDailyDetails'])->name('tracking.daily-details');
     Route::get('tracking/filtered-data', [App\Http\Controllers\TrackingController::class, 'getFilteredData'])->name('tracking.filtered-data');
+
+    // Group Tracking Routes
+    Route::get('group-tracking', [App\Http\Controllers\TrackingController::class, 'groupIndex'])->name('group-tracking');
+    Route::post('tracking/groups', [App\Http\Controllers\TrackingController::class, 'createGroup'])->name('tracking.groups.create');
+    Route::delete('tracking/groups/{group}', [App\Http\Controllers\TrackingController::class, 'deleteGroup'])->name('tracking.groups.delete');
+    Route::post('tracking/groups/{group}/members', [App\Http\Controllers\TrackingController::class, 'addGroupMember'])->name('tracking.groups.add-member');
+    Route::post('tracking/groups/{groupMember}/accept', [App\Http\Controllers\TrackingController::class, 'acceptGroupMember'])->name('tracking.groups.accept-member');
+    Route::delete('tracking/groups/members/{groupMember}', [App\Http\Controllers\TrackingController::class, 'removeGroupMember'])->name('tracking.groups.remove-member');
+    Route::get('tracking/groups/{group}/data', [App\Http\Controllers\TrackingController::class, 'getGroupData'])->name('tracking.groups.data');
+    Route::get('tracking/groups/{group}/search', [App\Http\Controllers\TrackingController::class, 'searchGroupMembers'])->name('tracking.groups.search');
 });
 
 require __DIR__.'/settings.php';
