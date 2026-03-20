@@ -6,6 +6,7 @@ import {
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -41,6 +42,11 @@ export default function GroupTracking({ groups, pendingGroupInvites }: GroupTrac
     const [showGroupSearch, setShowGroupSearch] = useState(false);
     const [isGroupSearching, setIsGroupSearching] = useState(false);
     const [isProcessingRequest, setIsProcessingRequest] = useState(false);
+
+    // Details modal state
+    const [detailsModal, setDetailsModal] = useState({ open: false, type: 'expense', userType: 'member', memberId: null as number | null, title: '' });
+    const [detailsData, setDetailsData] = useState<any[]>([]);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
     // Group actions
     const createGroup = () => {
@@ -99,6 +105,45 @@ export default function GroupTracking({ groups, pendingGroupInvites }: GroupTrac
         } catch { /* ignore */ } finally { setIsGroupSearching(false); }
     };
 
+    const fetchDetails = async (memberId: number, name: string) => {
+        setIsLoadingDetails(true);
+        setDetailsModal({ open: true, type: 'expense', userType: 'member', memberId, title: `${name}'s Expenses` });
+        try {
+            const res = await fetch(`/tracking/daily-details?type=expense&user_type=member&member_id=${memberId}`);
+            const data = await res.json();
+            setDetailsData(Array.isArray(data) ? data : []);
+        } catch { 
+            setDetailsData([]);
+        } finally { 
+            setIsLoadingDetails(false); 
+        }
+    };
+
+    const groupedDetailsData = detailsData.reduce((acc, item) => {
+        let date = item.expense_date || 'Unknown Date';
+        if (date !== 'Unknown Date') {
+            const d = new Date(date);
+            if (!isNaN(d.getTime())) {
+                date = `${d.getFullYear().toString().slice(-2)}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+            }
+        }
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(item);
+        return acc;
+    }, {} as Record<string, any[]>);
+
+    const groupedAndSummedDetailsData = Object.entries(groupedDetailsData).reduce((dateAcc, [date, items]) => {
+        const byName = (items as any[]).reduce((na: Record<string, any>, item: any) => {
+            const name = item.category?.name || item.description || 'Uncategorized';
+            if (!na[name]) na[name] = { name, totalAmount: 0, count: 0 };
+            na[name].totalAmount += parseFloat(item.amount);
+            na[name].count += 1;
+            return na;
+        }, {} as Record<string, any>);
+        dateAcc[date] = Object.values(byName);
+        return dateAcc;
+    }, {} as Record<string, any[]>);
+
     const toggleGroup = (groupId: number) => {
         if (expandedGroupId === groupId) {
             setExpandedGroupId(null);
@@ -123,7 +168,7 @@ export default function GroupTracking({ groups, pendingGroupInvites }: GroupTrac
                         </div>
                         <div>
                             <h1 className="text-xl font-black tracking-tight sm:text-2xl">Group Tracking</h1>
-                            <p className="text-xs text-muted-foreground sm:text-sm">Create groups and track expenses together. Income is hidden for privacy.</p>
+                            <p className="text-xs text-muted-foreground sm:text-sm">Create groups and track expenses together. Only expenses are shared for privacy.</p>
                         </div>
                     </div>
                     <Button size="sm" className="bg-violet-600 hover:bg-violet-700" onClick={() => setShowCreateGroup(!showCreateGroup)}>
@@ -165,7 +210,7 @@ export default function GroupTracking({ groups, pendingGroupInvites }: GroupTrac
                                     {invite.group.creator.name} invited you to{' '}
                                     <span className="text-violet-600">{invite.group.name}</span>
                                 </p>
-                                <p className="text-xs text-muted-foreground">Group tracking — income hidden</p>
+                                <p className="text-xs text-muted-foreground">Group tracking — only expenses shared</p>
                             </div>
                             <div className="flex gap-2">
                                 <Button size="sm" variant="outline" className="border-emerald-500/50 text-emerald-600" onClick={() => acceptGroupInvite(invite.member_id)}>
@@ -211,7 +256,7 @@ export default function GroupTracking({ groups, pendingGroupInvites }: GroupTrac
                                 <div className="flex items-center gap-2">
                                     <div className="flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-1">
                                         <EyeOff className="h-3 w-3 text-violet-500" />
-                                        <span className="text-[9px] font-bold text-violet-600">Income hidden</span>
+                                        <span className="text-[9px] font-bold text-violet-600">Privacy enabled</span>
                                     </div>
                                     {expandedGroupId === group.id
                                         ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -300,6 +345,24 @@ export default function GroupTracking({ groups, pendingGroupInvites }: GroupTrac
                                     </div>
                                 )}
 
+                                {/* Group Summary */}
+                                {!isLoadingGroupData && groupMembersData.length > 0 && (
+                                    <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="text-xs font-bold tracking-wider text-violet-500 uppercase">Group Summary</h4>
+                                                <p className="text-xs text-muted-foreground">Combined tracking for all members</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Total Group Expense</p>
+                                                <p className="text-2xl font-black text-rose-600">
+                                                    ${groupMembersData.reduce((sum, m) => sum + (m.data.totalExpense || 0), 0).toLocaleString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Members Financial Data */}
                                 {isLoadingGroupData ? (
                                     <div className="py-8 text-center text-sm text-muted-foreground">Loading member data...</div>
@@ -321,23 +384,15 @@ export default function GroupTracking({ groups, pendingGroupInvites }: GroupTrac
                                                         </div>
                                                     </CardHeader>
                                                     <CardContent className="space-y-1.5">
-                                                        <div className="flex items-center justify-between rounded-md bg-background/50 px-2.5 py-1.5">
-                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Balance</span>
-                                                            <span className="text-sm font-black">${member.data.balance.toLocaleString()}</span>
-                                                        </div>
-                                                        <div className="flex items-center justify-between rounded-md bg-background/50 px-2.5 py-1.5">
-                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Expense</span>
-                                                            <span className="text-sm font-bold text-rose-600">${member.data.totalExpense.toLocaleString()}</span>
-                                                        </div>
-                                                        <div className="flex items-center justify-between rounded-md bg-background/50 px-2.5 py-1.5">
-                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Saving</span>
-                                                            <span className="text-sm font-bold text-amber-600">${member.data.totalSaving.toLocaleString()}</span>
-                                                        </div>
-                                                        <div className="flex items-center justify-between rounded-md bg-violet-500/5 px-2.5 py-1.5">
-                                                            <span className="text-[10px] font-bold text-violet-500 uppercase">Income</span>
-                                                            <span className="flex items-center gap-1 text-xs font-bold text-violet-400">
-                                                                <EyeOff className="h-3 w-3" /> Hidden
-                                                            </span>
+                                                        <div 
+                                                            className="flex cursor-pointer items-center justify-between rounded-md bg-rose-500/5 px-2.5 py-2 transition-colors hover:bg-rose-500/10"
+                                                            onClick={() => fetchDetails(member.member_id, member.user.name)}
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] font-bold text-rose-500 uppercase">Expense</span>
+                                                                <span className="text-[9px] text-muted-foreground">Click for details</span>
+                                                            </div>
+                                                            <span className="text-base font-black text-rose-600">${member.data.totalExpense.toLocaleString()}</span>
                                                         </div>
                                                         {group.is_creator && member.user.id !== group.creator.id && (
                                                             <Button size="sm" variant="ghost" className="mt-1 h-7 w-full text-[10px] text-rose-500" onClick={() => removeGroupMember(member.member_id)}>
@@ -355,6 +410,46 @@ export default function GroupTracking({ groups, pendingGroupInvites }: GroupTrac
                     </Card>
                 ))}
             </div>
+
+            {/* Transaction Details Modal */}
+            <Dialog open={detailsModal.open} onOpenChange={(open) => setDetailsModal({ ...detailsModal, open })}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{detailsModal.title}</DialogTitle>
+                        <DialogDescription>Daily expense breakdown</DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4 max-h-[60vh] space-y-4 overflow-y-auto pr-2">
+                        {isLoadingDetails ? (
+                            <div className="py-10 text-center text-sm text-muted-foreground">Loading details...</div>
+                        ) : detailsData.length > 0 ? (
+                            <div className="space-y-6 pb-4">
+                                {Object.entries(groupedAndSummedDetailsData)
+                                    .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
+                                    .map(([date, groups]) => (
+                                        <div key={date} className="mb-6 space-y-3">
+                                            <h3 className="sticky top-0 z-10 bg-background/90 py-2 text-xs font-bold tracking-wider text-muted-foreground uppercase backdrop-blur-md">{date}</h3>
+                                            <div className="space-y-2">
+                                                {groups.map((group: any, idx: number) => (
+                                                    <div key={idx} className="flex items-center justify-between rounded-lg border bg-muted/20 p-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="rounded bg-rose-500/10 px-2 py-0.5 text-xs font-black text-rose-600 uppercase">{group.name}</span>
+                                                            {group.count > 1 && <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{group.count} txns</span>}
+                                                        </div>
+                                                        <div className="text-base font-black text-rose-600">
+                                                            -${group.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        ) : (
+                            <div className="py-10 text-center text-sm text-muted-foreground">No expenses found for this period.</div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

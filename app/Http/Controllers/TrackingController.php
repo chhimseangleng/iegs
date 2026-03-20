@@ -245,12 +245,13 @@ class TrackingController extends Controller
     public function getDailyDetails(Request $request)
     {
         $request->validate([
-            'user_type' => 'required|in:me,partner',
+            'user_type' => 'required|in:me,partner,member',
             'type' => 'required|in:income,expense,saving',
             'date' => 'nullable|date',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'favorite_id' => 'nullable|integer',
+            'member_id' => 'nullable|integer',
         ]);
 
         /** @var User $currentUser */
@@ -258,9 +259,28 @@ class TrackingController extends Controller
 
         if ($request->user_type === 'me') {
             $user = $currentUser;
-        } else {
+        } elseif ($request->user_type === 'partner') {
             if (!$request->favorite_id) return response()->json(['error' => 'No partner specified.'], 400);
             $user = $currentUser->linkedFavoriteById($request->favorite_id);
+        } else {
+            if (!$request->member_id) return response()->json(['error' => 'No member specified.'], 400);
+            $groupMember = TrackingGroupMember::find($request->member_id);
+            if (!$groupMember) return response()->json(['error' => 'Member not found.'], 404);
+            
+            // Verify current user is in the same group and the group invitation is accepted
+            $isMember = TrackingGroupMember::where('group_id', $groupMember->group_id)
+                ->where('user_id', $currentUser->id)
+                ->where('status', 'accepted')
+                ->exists();
+            
+            if (!$isMember) return response()->json(['error' => 'Not authorized.'], 403);
+            
+            $user = $groupMember->user;
+            
+            // SECURITY: For group tracking, ONLY allow expense details
+            if ($request->type !== 'expense') {
+                return response()->json(['error' => 'Only expense details are shared in groups.'], 403);
+            }
         }
 
         if (!$user) return response()->json(['error' => 'User not found or not linked.'], 404);
@@ -375,8 +395,11 @@ class TrackingController extends Controller
         $membersData = [];
         foreach ($group->acceptedMembers()->with('user')->get() as $member) {
             $data = $this->getDashboardData($member->user);
-            // Hide income for group tracking
+            // Hide sensitive data for group tracking
             $data['totalIncome'] = null;
+            $data['totalSaving'] = null;
+            $data['balance'] = null;
+            $data['goals'] = [];
             $data['hideIncome'] = true;
             $membersData[] = [
                 'user' => $member->user->only('id', 'name', 'email'),
